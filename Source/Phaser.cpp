@@ -75,6 +75,8 @@ void Phaser::process(juce::AudioBuffer<float>& buffer)
     }
 
     processDepth(buffer);
+
+    buffer.applyGain(getGain());
 }
 
 
@@ -218,5 +220,10 @@ float Phaser::getCenter()
 float Phaser::getSpread()
 {
     return *parameters.getRawParameterValue(ParamIDs::spread);
+}
+
+float Phaser::getGain()
+{
+    return *parameters.getRawParameterValue(ParamIDs::gain);
 }
 //==============================================================================

@@ -21,7 +21,7 @@ PhaserAudioProcessorEditor::PhaserAudioProcessorEditor (PhaserAudioProcessor& p)
 
     setSize(1000, 500);
     setResizable(true, true);
-    // setResizeLimits(500, 250, 1500, 75);
+    setResizeLimits(900, 350, 1500, 500);
     getConstrainer()->setFixedAspectRatio(2.0);
 
     resized();
@@ -80,13 +80,15 @@ void PhaserAudioProcessorEditor::resized()
 
     auto localBounds = getLocalBounds().reduced(20);
 
-    // Depth Box
+    // Output Box
     juce::FlexBox depthBox = createFlexBox(depthLabel, depthSlider);
+    juce::FlexBox gainBox = createFlexBox(gainLabel, gainSlider);
     juce::FlexBox outputBox;
     outputBox.flexDirection = juce::FlexBox::Direction::column;
     outputBox.alignContent = juce::FlexBox::AlignContent::center;
     outputBox.justifyContent = juce::FlexBox::JustifyContent::center;
     outputBox.items.add(juce::FlexItem(depthBox).withFlex(1).withMargin({ 0, 0, 0, static_cast<float>(localBounds.getWidth() / 20) }));
+    outputBox.items.add(juce::FlexItem(gainBox).withFlex(1).withMargin({ 0, 0, 0, static_cast<float>(localBounds.getWidth() / 20) }));
 
     // Effect Box
     juce::FlexBox effectBox;
@@ -135,6 +137,9 @@ void PhaserAudioProcessorEditor::initGUI()
     
     initRotarySlider("Stereo", stereoLabel, stereoSlider, ParamRange::stereoStart, ParamRange::stereoEnd, ParamRange::stereoInterval, ParamRange::stereoDefault);
     stereoAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, ParamIDs::stereo, stereoSlider));
+
+    initRotarySlider("Gain", gainLabel, gainSlider, ParamRange::gainStart, ParamRange::gainEnd, ParamRange::gainInterval, ParamRange::gainDefault);
+    gainAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, ParamIDs::gain, gainSlider));
 
     initGroup("Filters", filtersGroup);
     initGroup("LFO", lfoGroup);

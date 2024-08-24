@@ -23,6 +23,7 @@ namespace ParamIDs
     constexpr auto lfoDepth = "lfoDepth";
     constexpr auto stereo = "stereo";
     constexpr auto bypass = "bypass";
+    constexpr auto gain = "gain";
 }
 
 namespace ParamRange
@@ -70,6 +71,11 @@ namespace ParamRange
     constexpr float stereoEnd = 1.f;
     constexpr float stereoInterval = 0.01f;
     constexpr float stereoDefault = 0.f;
+
+    constexpr float gainStart = -40.0f;
+    constexpr float gainEnd = 40.0f;
+    constexpr float gainInterval = 0.1f;
+    constexpr float gainDefault = 0.1f;
 }
 
 class ParamsHelper
