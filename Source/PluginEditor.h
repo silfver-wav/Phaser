@@ -57,6 +57,7 @@ private:
     juce::Label lfoFreqLabel;
     juce::Label lfoDepthLabel;
     juce::Label stereoLabel;
+    juce::Label gainLabel;
 
     // Sliders
     juce::Slider nrStagesSlider;
@@ -67,6 +68,7 @@ private:
     juce::Slider lfoFreqSlider;
     juce::Slider lfoDepthSlider;
     juce::Slider stereoSlider;
+    juce::Slider gainSlider;
 
     // Attachments
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> nrStagesAttachment;
@@ -79,6 +81,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfoDepthAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> stereoAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> bypassAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
 
     // Buttons
     juce::ToggleButton invertPolarityButton;

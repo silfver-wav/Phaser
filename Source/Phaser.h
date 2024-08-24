@@ -72,5 +72,6 @@ private:
     float getAmountOfStereo();
     float getCenter();
     float getSpread();
+    float getGain();
     //==============================================================================
 };
