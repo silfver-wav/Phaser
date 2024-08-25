@@ -38,7 +38,7 @@ public:
         // Draw path of slider foreground (in blue)
         juce::Path foregroundArc;
         foregroundArc.addCentredArc(centreX, centreY, radius, radius, 0.0f, rotaryStartAngle, angle, true);
-        g.setColour(juce::Colours::blue);
+        g.setColour(juce::Colour::fromRGB(51, 191, 219));
         g.strokePath(foregroundArc, juce::PathStrokeType(3.f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
         // Pointer

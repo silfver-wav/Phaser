@@ -21,7 +21,7 @@ PhaserAudioProcessorEditor::PhaserAudioProcessorEditor (PhaserAudioProcessor& p)
 
     setSize(1000, 500);
     setResizable(true, true);
-    // setResizeLimits(500, 250, 1500, 75);
+    setResizeLimits(900, 350, 1500, 500);
     getConstrainer()->setFixedAspectRatio(2.0);
 
     resized();
@@ -36,7 +36,8 @@ void PhaserAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     
-    g.fillAll (juce::Colours::black.brighter(0.1));
+    // g.fillAll (juce::Colours::black.brighter(0.2));
+    g.fillAll(juce::Colour::fromRGB(55, 55, 55));
 
     g.setColour (juce::Colours::black);
     g.setFont (15.0f);
@@ -80,13 +81,15 @@ void PhaserAudioProcessorEditor::resized()
 
     auto localBounds = getLocalBounds().reduced(20);
 
-    // Depth Box
+    // Output Box
     juce::FlexBox depthBox = createFlexBox(depthLabel, depthSlider);
+    juce::FlexBox gainBox = createFlexBox(gainLabel, gainSlider);
     juce::FlexBox outputBox;
     outputBox.flexDirection = juce::FlexBox::Direction::column;
     outputBox.alignContent = juce::FlexBox::AlignContent::center;
     outputBox.justifyContent = juce::FlexBox::JustifyContent::center;
     outputBox.items.add(juce::FlexItem(depthBox).withFlex(1).withMargin({ 0, 0, 0, static_cast<float>(localBounds.getWidth() / 20) }));
+    outputBox.items.add(juce::FlexItem(gainBox).withFlex(1).withMargin({ 0, 0, 0, static_cast<float>(localBounds.getWidth() / 20) }));
 
     // Effect Box
     juce::FlexBox effectBox;
@@ -136,6 +139,9 @@ void PhaserAudioProcessorEditor::initGUI()
     initRotarySlider("Stereo", stereoLabel, stereoSlider, ParamRange::stereoStart, ParamRange::stereoEnd, ParamRange::stereoInterval, ParamRange::stereoDefault);
     stereoAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, ParamIDs::stereo, stereoSlider));
 
+    initRotarySlider("Gain", gainLabel, gainSlider, ParamRange::gainStart, ParamRange::gainEnd, ParamRange::gainInterval, ParamRange::gainDefault);
+    gainAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, ParamIDs::gain, gainSlider));
+
     initGroup("Filters", filtersGroup);
     initGroup("LFO", lfoGroup);
     initGroup("Output", outputGroup);
@@ -176,7 +182,8 @@ void PhaserAudioProcessorEditor::initToggleButton(const std::string& name, juce:
 void PhaserAudioProcessorEditor::initGroup(const std::string& name, juce::GroupComponent& group)
 {
     group.setText(name);
-    group.setColour(juce::GroupComponent::outlineColourId, juce::Colours::white);
+    // group.setColour(juce::GroupComponent::outlineColourId, juce::Colours::white);
+    group.setColour(juce::GroupComponent::outlineColourId, juce::Colours::black); // juce::Colour::fromRGB(51, 191, 219)
     group.setColour(juce::GroupComponent::textColourId, juce::Colours::white);
     addAndMakeVisible(group);
 }

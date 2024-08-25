@@ -112,6 +112,22 @@ juce::AudioProcessorValueTreeState::ParameterLayout ParamsHelper::createParamete
             }
     ));
 
+
+    params.push_back(std::make_unique<AudioParameterFloat>(ParamIDs::gain, 
+            "Gain",
+            NormalisableRange<float>(
+            ParamRange::gainStart,
+            ParamRange::gainEnd,
+            ParamRange::gainInterval), 
+            ParamRange::gainDefault,
+            String(),
+            AudioProcessorParameter::genericParameter,
+            [](float value, float)
+            {
+                return String(value, 1) + " dB ";
+            }
+    ));
+
     params.push_back(std::make_unique<AudioParameterBool>(ParamIDs::bypass, "Bypass", false));
 
     return { params.begin(), params.end() };
