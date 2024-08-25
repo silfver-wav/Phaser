@@ -36,7 +36,8 @@ void PhaserAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     
-    g.fillAll (juce::Colours::black.brighter(0.1));
+    // g.fillAll (juce::Colours::black.brighter(0.2));
+    g.fillAll(juce::Colour::fromRGB(55, 55, 55));
 
     g.setColour (juce::Colours::black);
     g.setFont (15.0f);
@@ -181,7 +182,8 @@ void PhaserAudioProcessorEditor::initToggleButton(const std::string& name, juce:
 void PhaserAudioProcessorEditor::initGroup(const std::string& name, juce::GroupComponent& group)
 {
     group.setText(name);
-    group.setColour(juce::GroupComponent::outlineColourId, juce::Colours::white);
+    // group.setColour(juce::GroupComponent::outlineColourId, juce::Colours::white);
+    group.setColour(juce::GroupComponent::outlineColourId, juce::Colours::black); // juce::Colour::fromRGB(51, 191, 219)
     group.setColour(juce::GroupComponent::textColourId, juce::Colours::white);
     addAndMakeVisible(group);
 }
