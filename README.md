@@ -7,6 +7,8 @@ A Phaser effect plugin built using JUCE.
 The Phaser splits the incoming audio signal into two paths: a dry signal and a wet signal. The wet signal is processed through a series of all-pass filters, 
 which alter the phase of the signal. When the dry and wet signals are combined, the phase differences create characteristic notches in the frequency spectrum, producing the classic phaser sound.
 
+![Phaser Demo](Demo/phaser.png)
+
 ## Parameters
 The phaser contains parameters for:
 
