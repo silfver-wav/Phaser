@@ -75,7 +75,7 @@ namespace ParamRange
     constexpr float gainStart = -12.0f;
     constexpr float gainEnd = 12.0f;
     constexpr float gainInterval = 0.1f;
-    constexpr float gainDefault = 0.1f;
+    constexpr float gainDefault = 0.0f;
 }
 
 class ParamsHelper
