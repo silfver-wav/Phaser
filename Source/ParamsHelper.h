@@ -35,7 +35,7 @@ namespace ParamRange
 
     constexpr float spreadStart = 0.f;
     constexpr float spreadEnd = 1.f;
-    constexpr float spreadInterval = 0.1f;
+    constexpr float spreadInterval = 0.001f;
     constexpr float spreadDefault = 0.01f;
 
     constexpr float centerStart = 20.f;
@@ -72,10 +72,10 @@ namespace ParamRange
     constexpr float stereoInterval = 0.01f;
     constexpr float stereoDefault = 0.f;
 
-    constexpr float gainStart = -40.0f;
-    constexpr float gainEnd = 40.0f;
+    constexpr float gainStart = -12.0f;
+    constexpr float gainEnd = 12.0f;
     constexpr float gainInterval = 0.1f;
-    constexpr float gainDefault = 0.1f;
+    constexpr float gainDefault = 0.0f;
 }
 
 class ParamsHelper

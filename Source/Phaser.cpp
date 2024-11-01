@@ -224,6 +224,7 @@ float Phaser::getSpread()
 
 float Phaser::getGain()
 {
-    return *parameters.getRawParameterValue(ParamIDs::gain);
+    float gainDB = *parameters.getRawParameterValue(ParamIDs::gain);
+    return juce::Decibels::decibelsToGain(gainDB);
 }
 //==============================================================================
