@@ -1,4 +1,3 @@
-
 #include "Phaser.h"
 
 namespace DSP
@@ -6,81 +5,97 @@ namespace DSP
     Phaser::Phaser(juce::AudioProcessorValueTreeState& params) : parameters(params)
     {
         parameters.addParameterListener(ParamIDs::lfoFreq, this);
-        parameters.addParameterListener(ParamIDs::lfoDepth, this);
+        parameters.addParameterListener(ParamIDs::lfoRate, this);
+        parameters.addParameterListener(ParamIDs::lfoSyncMode, this);
+        parameters.addParameterListener(ParamIDs::mix, this);
+        parameters.addParameterListener(ParamIDs::waveForm, this);
+        dryWet.setMixingRule(juce::dsp::DryWetMixingRule::linear);
     }
 
     Phaser::~Phaser()
     {
         parameters.removeParameterListener(ParamIDs::lfoFreq, this);
-        parameters.removeParameterListener(ParamIDs::lfoDepth, this);
+        parameters.removeParameterListener(ParamIDs::lfoRate, this);
+        parameters.removeParameterListener(ParamIDs::lfoSyncMode, this);
+        parameters.removeParameterListener(ParamIDs::mix, this);
+        parameters.removeParameterListener(ParamIDs::waveForm, this);
     }
 
     //==============================================================================
     void Phaser::prepare(juce::dsp::ProcessSpec& spec)
     {
+        jassert(spec.sampleRate > 0);
+        jassert(spec.numChannels > 0);
+
         sampleRate = static_cast<float>(spec.sampleRate);
         numChannels = spec.numChannels;
 
-        // Prepare components
-        drySignal.setSize(numChannels, spec.maximumBlockSize);
+        dryWet.prepare(spec);
+        feedback.resize(spec.numChannels);
+        osc.prepare(spec);
         prepareAPFilters();
-        feedback.resize(numChannels, 0.f);
-        prepareLFO(spec);
+
+        updateFreq();
+        updateOsc();
+        updateDryWet();
+        reset();
+    }
+
+    void Phaser::reset()
+    {
+        std::ranges::fill(feedback, static_cast<float>(0));
+
+        osc.reset();
+        dryWet.reset();
     }
 
     void Phaser::prepareAPFilters()
     {
-        int nrOfStages = getNrStages();
+        const int nrOfStages = getNrStages();
 
-        for (int i = 0; i < nrOfStages; i++) {
+        for (int i = 0; i < nrOfStages; i++)
+        {
             float stageFrequency = getStageFrequency(nrOfStages, i);
             phaserStages[i].setFilterCoefficient(stageFrequency, sampleRate);
         }
     }
 
-
-    void Phaser::prepareLFO(const juce::dsp::ProcessSpec& spec)
-    {
-        lfo.initialise([](float x) { return std::sin(x); }, 128);
-        lfo.prepare(spec);
-        lfo.setFrequency(lfoFrequency);
-    }
-
     //==============================================================================
-    void Phaser::process(juce::AudioBuffer<float>& buffer)
+    void Phaser::process(const juce::dsp::ProcessContextReplacing<float>& context)
     {
-        for (int channel = 0; channel < buffer.getNumChannels(); channel++)
+        const auto& inputBlock = context.getInputBlock();
+        auto& outputBlock = context.getOutputBlock();
+        const auto numChannels = outputBlock.getNumChannels();
+        const auto numSamples = outputBlock.getNumSamples();
+
+        jassert(inputBlock.getNumChannels() == numChannels);
+        jassert(inputBlock.getNumSamples() == numSamples);
+
+        dryWet.pushDrySamples(inputBlock);
+
+        for (size_t channel = 0; channel < numChannels; ++channel)
         {
-            drySignal.copyFrom(channel, 0, buffer.getReadPointer(channel), buffer.getNumSamples());
-            processAllPassFilters(buffer, channel);
+            auto* inputSamples = inputBlock.getChannelPointer(channel);
+            auto* outputSamples = outputBlock.getChannelPointer(channel);
+            float phaseOffset = (channel == 1) ? juce::MathConstants<float>::halfPi * getAmountOfStereo() : 0.0f;
+
+            for (size_t sampleIndex = 0; sampleIndex < numSamples; ++sampleIndex)
+            {
+                auto input = inputSamples[sampleIndex];
+
+                auto feedbackSign = getInvertPolarity() ? -1 : 1;
+                float inputWithFeedback = input + feedbackSign * feedback[channel];;
+
+                float lfoValue = osc.processSample(0.f + phaseOffset);
+                processSampleThroughFilters(inputWithFeedback, lfoValue, static_cast<int>(channel));
+
+                outputSamples[sampleIndex] = inputWithFeedback;
+            }
         }
 
-        processDepth(buffer);
-
-        buffer.applyGain(getGain());
+        dryWet.mixWetSamples(outputBlock);
     }
 
-
-    void Phaser::processAllPassFilters(juce::AudioBuffer<float>& buffer, int channel)
-    {
-        const float* inputSamples = buffer.getReadPointer(channel);
-        float* outputSamples = buffer.getWritePointer(channel);
-
-        float amountOfFeedback = getFeedback();
-        float phaseOffset = (channel == 1) ? juce::MathConstants<float>::halfPi * getAmountOfStereo() : 0.0f;
-
-        for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++)
-        {
-            float feedbackInput = feedback[channel] * amountOfFeedback * (getInvertPolarity() ? -1 : 1);
-            float inputSample = inputSamples[sampleIndex] + feedbackInput;
-
-            float lfoValue = lfo.processSample(0.f + phaseOffset);
-            processSampleThroughFilters(inputSample, lfoValue, channel);
-
-            outputSamples[sampleIndex] = inputSample;
-            feedback[channel] = inputSample;
-        }
-    }
 
     void Phaser::processSampleThroughFilters(float& sample, float lfoValue, int channel)
     {
@@ -88,35 +103,78 @@ namespace DSP
 
         for (int i = 0; i < nrOfStages; i++)
         {
-            float freq = getStageFrequency(nrOfStages, i) + lfoValue * (maxFreqLFO - minFreqLFO) * lfoDepth;
+            float freq = getStageFrequency(nrOfStages, i) + lfoValue * (maxFreq - minFreq) * lfoDepth;
             float modulatedFrequency = juce::jlimit(minFreq, maxFreq, freq);
             phaserStages[i].setFilterCoefficient(modulatedFrequency, sampleRate);
             sample = phaserStages[i].process(sample, channel);
         }
     }
 
-    void Phaser::processDepth(juce::AudioBuffer<float>& buffer)
+    void Phaser::parameterChanged(const juce::String& parameterID,
+                                  float newValue)
     {
-        float gain = 1 - getDepth();
-        buffer.applyGain(getDepth());
-
-        for (int channel = 0; channel < buffer.getNumChannels(); channel++)
+        if (parameterID == ParamIDs::lfoFreq || parameterID == ParamIDs::lfoRate ||
+            parameterID == ParamIDs::lfoSyncMode)
         {
-            buffer.addFromWithRamp(channel, 0, drySignal.getReadPointer(channel), drySignal.getNumSamples(), gain, gain);
+            updateFreq();
+        }
+        else if (parameterID == ParamIDs::mix)
+        {
+            updateDryWet();
+        }
+        else if (parameterID == ParamIDs::waveForm)
+        {
+            updateOsc();
         }
     }
-    //==============================================================================
 
-    void Phaser::parameterChanged(const juce::String& parameterID, float newValue)
+    inline void Phaser::updateDryWet() { dryWet.setWetMixProportion(getMix() / 2.0f); }
+
+    void Phaser::updateFreq()
     {
-        if (parameterID == ParamIDs::lfoFreq)
+        float freq;
+        switch (getLFOSyncMode())
         {
-            lfo.setFrequency(newValue);
+        case 0:
+            freq = getLFOFreq();
+            break;
+        case 1:
+            freq = getSubdivisionFreq(getLFOSyncRate());
+            break;
+        default:
+            freq = getLFOFreq();
+            break;
         }
-        else if (parameterID == ParamIDs::lfoDepth)
+
+        osc.setFrequency(freq);
+    }
+
+    void Phaser::updateOsc()
+    {
+        std::function<float(float)> oscFunction;
+        switch (getWaveForm())
         {
-            lfoDepth = newValue;
+        case 0:
+            oscFunction = [](float x) { return std::sin(x); };
+            break;
+        case 1:
+            oscFunction = [](float x)
+            {
+                return (2 / juce::MathConstants<float>::pi) * std::asin(std::sin(x));
+            };
+            break;
+        case 2:
+            oscFunction = [](float x) { return x < 0.0f ? -1.0f : 1.0f; };
+            break;
+        case 3:
+            oscFunction = [](float x) { return x / juce::MathConstants<float>::pi; };
+            break;
+        default:
+            oscFunction = [](float x) { return std::sin(x); };
+            break;
         }
+
+        osc.initialise(oscFunction);
     }
 
     //==============================================================================
@@ -162,4 +220,55 @@ namespace DSP
         return centerFrequency;
     }
 
+    float Phaser::getSubdivisionFreq(const int choice) const
+    {
+        if (BPM <= 0.0)
+            return 0.0f;
+
+        double beatDuration = 60.0 / BPM; // Quarter note (1/4) in seconds
+
+        double multiplier = 1.0;
+        switch (choice)
+        {
+        case 0: // Whole note (1/1)
+            multiplier = 4.0;
+            break;
+        case 1: // Half note (1/2)
+            multiplier = 2.0;
+            break;
+        case 2: // Quarter note (1/4)
+            multiplier = 1.0;
+            break;
+        case 3: // Dotted-quarter note (1/4.)
+            multiplier = 1.5;
+            break;
+        case 4: // Triplet-quarter note (1/4T)
+            multiplier = 2.0 / 3.0;
+            break;
+        case 5: // Eighth note (1/8)
+            multiplier = 0.5;
+            break;
+        case 6: // Dotted-eighth note (1/8.)
+            multiplier = 0.75;
+            break;
+        case 7: // Triplet-eighth note (1/8T)
+            multiplier = 1.0 / 3.0;
+            break;
+        case 8: // Sixteenth note (1/16)
+            multiplier = 0.25;
+            break;
+        case 9: // Dotted-sixteenth note (1/16.)
+            multiplier = 0.375;
+            break;
+        case 10: // Triplet-sixteenth note (1/16T)
+            multiplier = 1.0 / 6.0;
+            break;
+        default:
+            return 0.0f; // Invalid choice
+        }
+
+        double freq = 1.0 / (beatDuration * multiplier);
+
+        return static_cast<float>(freq);
+    }
 }

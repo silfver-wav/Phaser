@@ -146,11 +146,16 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     if (auto* playHead = getPlayHead())
     {
         auto position = playHead->getPosition();
-        // if (position->getBpm().hasValue())
-        // set bpm
+        if (position->getBpm().hasValue())
+        phaser.setBPM(*position->getBpm());
     }
 
     if (!(bool)*parameters.getRawParameterValue(ParamIDs::power)) return;
+
+    juce::dsp::AudioBlock<float> sampleBlock (buffer);
+    auto context = juce::dsp::ProcessContextReplacing<float> (sampleBlock);
+
+    phaser.process (context);
 
     phaser.process(buffer);
 }

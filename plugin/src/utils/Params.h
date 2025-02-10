@@ -8,9 +8,11 @@ namespace ParamIDs
     constexpr auto center = "center";
     constexpr auto feedback = "feedback";
     constexpr auto invertPolarity = "invertPolarity";
-    constexpr auto depth = "depth";
     constexpr auto lfoFreq = "lfoFreq";
+    constexpr auto lfoSyncMode = "lfoSyncMode";
+    constexpr auto lfoRate = "lfoRate";
     constexpr auto lfoDepth = "lfoDepth";
+    constexpr auto waveForm = "waveForm";
     constexpr auto stereo = "stereo";
     constexpr auto power = "power";
     constexpr auto mix = "mix";
@@ -43,20 +45,23 @@ namespace ParamRange
     constexpr float invertPolarityEnd = 0.5f;
     constexpr float invertPolarityInterval = 0.001f;
 
-    constexpr float depthStart = 0.f;
-    constexpr float depthEnd = 0.5f;
-    constexpr float depthInterval = 0.001f;
-    constexpr float depthDefault = 0.25f;
-
     constexpr float lfoFreqStart = 0.0f;
     constexpr float lfoFreqEnd = 1.50f;
     constexpr float lfoFreqInterval = 0.01f;
     constexpr float lfoFreqDefault = 0.01f;
 
+    const juce::StringArray lfoRates = {
+        "1/1", "1/2", "1/4", "1/4.",
+        "1/4T", "1/8", "1/8.", "1/8T",
+        "1/16", "1/16.", "1/16T"
+    };
+
     constexpr float lfoDepthStart = 0.f;
     constexpr float lfoDepthEnd = 1.f;
     constexpr float lfoDepthInterval = 0.01f;
     constexpr float lfoDepthDefault = 0.5f;
+
+    const juce::StringArray waveformChoices = {"Sine", "Triangle", "Square", "Saw"};
 
     constexpr float stereoStart = 0.f;
     constexpr float stereoEnd = 1.f;

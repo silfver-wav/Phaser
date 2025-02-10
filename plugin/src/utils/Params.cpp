@@ -62,20 +62,6 @@ Params::createParameterLayout()
     params.push_back(std::make_unique<AudioParameterBool>(ParamIDs::invertPolarity, "Invert Polarity", false));
 
     params.push_back(
-        std::make_unique<AudioParameterFloat>(ParamIDs::depth,
-                                              "Depth",
-                                              NormalisableRange<float>(ParamRange::depthStart, ParamRange::depthEnd,
-                                                                       ParamRange::depthInterval),
-                                              ParamRange::depthDefault,
-                                              String(),
-                                              AudioProcessorParameter::genericParameter,
-                                              [](float value, float)
-                                              {
-                                                  return String(value * 200.0f, 1) + " %";
-                                              }
-        ));
-
-    params.push_back(
         std::make_unique<AudioParameterFloat>(ParamIDs::lfoFreq,
                                               "LFO Frequency",
                                               NormalisableRange<float>(ParamRange::lfoFreqStart, ParamRange::lfoFreqEnd,
@@ -89,6 +75,13 @@ Params::createParameterLayout()
                                               }
         ));
 
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::lfoSyncMode, "LFO Sync Mode",
+        StringArray{"Frequency", "Tempo-Synced"}, 0));
+
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::lfoRate, "LFO Rate", ParamRange::lfoRates, 2));
+
     params.push_back(
         std::make_unique<AudioParameterFloat>(ParamIDs::lfoDepth,
                                               "LFO Depth",
@@ -97,6 +90,9 @@ Params::createParameterLayout()
                                                                        ParamRange::lfoDepthInterval),
                                               ParamRange::lfoDepthDefault
         ));
+
+    params.push_back(std::make_unique<AudioParameterChoice>(
+        ParamIDs::waveForm, "LFO Wave Form", ParamRange::waveformChoices, 0));
 
     params.push_back(
         std::make_unique<AudioParameterFloat>(ParamIDs::stereo,

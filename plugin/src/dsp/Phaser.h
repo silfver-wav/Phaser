@@ -14,86 +14,88 @@ namespace DSP
         Phaser(juce::AudioProcessorValueTreeState& params);
         ~Phaser();
         void prepare(juce::dsp::ProcessSpec& spec);
-        void process(juce::AudioBuffer<float>& buffer);
-
+        void process(const juce::dsp::ProcessContextReplacing<float>& context);
+        void setBPM(double bpm);
+        void reset();
     private:
-        // Varibels
-
-        // Buffers
-        juce::AudioBuffer<float> drySignal;
-        std::vector<float> feedback;
-
-        // LFO related
-        float lfoFrequency = 0.1f;
-        float lfoDepth = 1.0f;
-
-        float minFreqLFO = 20.f;
-        float maxFreqLFO = 20000.0f;
-        juce::dsp::Oscillator<float> lfo;
-
-        // Allpass filters related
-        std::array<FirstOrderAllPass, 23> phaserStages;
-
-        int numChannels = 0;
-        float sampleRate = 44100.f;
-        float minFreq = 20.f;
-        float maxFreq = 20000.0f;
         juce::AudioProcessorValueTreeState& parameters;
+        juce::dsp::Oscillator<float> osc;
+        std::array<FirstOrderAllPass, 23> phaserStages;
+        juce::dsp::DryWetMixer<float> dryWet;
+        std::vector<float> feedback{2};
 
-        // Functions
-        //==============================================================================
+        float lfoFrequency = 0.1f, lfoDepth = 1.0f, minFreq = 20.f, maxFreq = 20000.0f;
+
+        float sampleRate = 44100.f;
+        int numChannels = 0;
+        double BPM = 0;
+
         void prepareAPFilters();
-        void prepareLFO(const juce::dsp::ProcessSpec& spec);
-        //==============================================================================
-
-        //==============================================================================
-        void processAllPassFilters(juce::AudioBuffer<float>& buffer, int channel);
         void processSampleThroughFilters(float& sample, float lfoValue, int channel);
-        void processDepth(juce::AudioBuffer<float>& buffer);
-        //==============================================================================
 
-        //==============================================================================
-        void parameterChanged(const juce::String& parameterID, float newValue);
+        void parameterChanged(const juce::String& parameterID, float newValue) override;
         float getStageFrequency(int nrOfStages, int index);
-        //==============================================================================
+        void updateOsc();
+        void updateFreq();
+        [[nodiscard]] float getSubdivisionFreq(int choice) const;
+        void updateDryWet();
 
-        //==============================================================================
-        int getNrStages() const
+        [[nodiscard]] int getNrStages() const
         {
             return *parameters.getRawParameterValue("nr.stages");
         }
 
-        float getFeedback() const
-        {
-            return *parameters.getRawParameterValue(ParamIDs::feedback);
-        }
-
-        bool getInvertPolarity() const
-        {
-            return *parameters.getRawParameterValue(ParamIDs::invertPolarity);
-        }
-
-        float getDepth() const
-        {
-            return *parameters.getRawParameterValue(ParamIDs::depth);
-        }
-
-        float getAmountOfStereo() const
-        {
-            return *parameters.getRawParameterValue(ParamIDs::stereo);
-        }
-
-        float getCenter() const
+        [[nodiscard]] float getCenter() const
         {
             return *parameters.getRawParameterValue(ParamIDs::center);
         }
 
-        float getSpread() const
+        [[nodiscard]] float getSpread() const
         {
             return *parameters.getRawParameterValue(ParamIDs::spread);
         }
 
-        float getGain() const
+        [[nodiscard]] float getFeedback() const
+        {
+            return *parameters.getRawParameterValue(ParamIDs::feedback);
+        }
+
+        [[nodiscard]] bool getInvertPolarity() const
+        {
+            return *parameters.getRawParameterValue(ParamIDs::invertPolarity);
+        }
+
+        [[nodiscard]] float getLFOFreq() const {
+            return *parameters.getRawParameterValue(ParamIDs::lfoFreq);
+        }
+
+        [[nodiscard]] int getLFOSyncRate() const {
+            return static_cast<int>(*parameters.getRawParameterValue(ParamIDs::lfoRate));
+        }
+
+        [[nodiscard]] int getLFOSyncMode() const {
+            return static_cast<int>(*parameters.getRawParameterValue(ParamIDs::lfoSyncMode));
+        }
+
+        [[nodiscard]] float getLFODepth() const {
+            return *parameters.getRawParameterValue(ParamIDs::lfoDepth);
+        }
+
+        [[nodiscard]] int getWaveForm() const {
+            return static_cast<int>(*parameters.getRawParameterValue(ParamIDs::waveForm));
+        }
+
+        [[nodiscard]] float getAmountOfStereo() const
+        {
+            return *parameters.getRawParameterValue(ParamIDs::stereo);
+        }
+
+        [[nodiscard]] float getMix() const
+        {
+            return *parameters.getRawParameterValue(ParamIDs::mix);
+        }
+
+        [[nodiscard]] float getGain() const
         {
             float gainDB = *parameters.getRawParameterValue(ParamIDs::gain);
             return juce::Decibels::decibelsToGain(gainDB);
