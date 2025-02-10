@@ -157,7 +157,9 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     phaser.process (context);
 
-    phaser.process(buffer);
+    float gainDB = *parameters.getRawParameterValue(ParamIDs::gain);
+    float gain = juce::Decibels::decibelsToGain(gainDB);
+    buffer.applyGain(gain);
 }
 
 bool AudioPluginAudioProcessor::hasEditor() const
