@@ -24,7 +24,8 @@ namespace DSP
         juce::dsp::DryWetMixer<float> dryWet;
         std::vector<float> feedback{2};
 
-        float lfoFrequency = 0.1f, lfoDepth = 1.0f, minFreq = 20.f, maxFreq = 20000.0f;
+        float lfoFrequency = 0.1f, minFreq = 20.f, maxFreq = 20000.0f;
+        juce::LinearSmoothedValue<float> lfoValue { ParamRange::lfoFreqDefault }, center { ParamRange::centerDefault };
 
         float sampleRate = 44100.f;
         int numChannels = 0;
@@ -43,11 +44,6 @@ namespace DSP
         [[nodiscard]] int getNrStages() const
         {
             return *parameters.getRawParameterValue("nr.stages");
-        }
-
-        [[nodiscard]] float getCenter() const
-        {
-            return *parameters.getRawParameterValue(ParamIDs::center);
         }
 
         [[nodiscard]] float getSpread() const

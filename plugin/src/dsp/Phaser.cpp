@@ -4,6 +4,7 @@ namespace DSP
 {
     Phaser::Phaser(juce::AudioProcessorValueTreeState& params) : parameters(params)
     {
+        parameters.addParameterListener(ParamIDs::center, this);
         parameters.addParameterListener(ParamIDs::lfoFreq, this);
         parameters.addParameterListener(ParamIDs::lfoRate, this);
         parameters.addParameterListener(ParamIDs::lfoSyncMode, this);
@@ -14,6 +15,7 @@ namespace DSP
 
     Phaser::~Phaser()
     {
+        parameters.removeParameterListener(ParamIDs::center, this);
         parameters.removeParameterListener(ParamIDs::lfoFreq, this);
         parameters.removeParameterListener(ParamIDs::lfoRate, this);
         parameters.removeParameterListener(ParamIDs::lfoSyncMode, this);
@@ -29,6 +31,9 @@ namespace DSP
 
         sampleRate = static_cast<float>(spec.sampleRate);
         numChannels = spec.numChannels;
+
+        lfoValue.reset(sampleRate, 0.01f);
+        center.reset(sampleRate, 0.01);
 
         dryWet.prepare(spec);
         feedback.resize(spec.numChannels);
@@ -75,21 +80,23 @@ namespace DSP
 
         for (size_t channel = 0; channel < numChannels; ++channel)
         {
-            auto* inputSamples = inputBlock.getChannelPointer(channel);
-            auto* outputSamples = outputBlock.getChannelPointer(channel);
+            auto *inputSamples = inputBlock.getChannelPointer(channel);
+            auto *outputSamples = outputBlock.getChannelPointer(channel);
             float phaseOffset = (channel == 1) ? juce::MathConstants<float>::halfPi * getAmountOfStereo() : 0.0f;
 
-            for (size_t sampleIndex = 0; sampleIndex < numSamples; ++sampleIndex)
+            for (size_t i = 0; i < numSamples; ++i)
             {
-                auto input = inputSamples[sampleIndex];
+                auto input = inputSamples[i];
 
                 auto feedbackSign = getInvertPolarity() ? -1 : 1;
-                float inputWithFeedback = input + feedbackSign * feedback[channel];;
+                float inputWithFeedback = input + static_cast<float>(feedbackSign) * feedback[channel];;
 
-                float lfoValue = osc.processSample(0.f + phaseOffset);
-                processSampleThroughFilters(inputWithFeedback, lfoValue, static_cast<int>(channel));
+                lfoValue.setTargetValue(osc.processSample(0.f + phaseOffset));
 
-                outputSamples[sampleIndex] = inputWithFeedback;
+                processSampleThroughFilters(inputWithFeedback, lfoValue.getNextValue(), static_cast<int>(channel));
+
+                outputSamples[i] = inputWithFeedback;
+                feedback[channel] = inputWithFeedback * getFeedback();
             }
         }
 
@@ -103,7 +110,7 @@ namespace DSP
 
         for (int i = 0; i < nrOfStages; i++)
         {
-            float freq = getStageFrequency(nrOfStages, i) + lfoValue * (maxFreq - minFreq) * lfoDepth;
+            float freq = getStageFrequency(nrOfStages, i) + lfoValue * getLFODepth() * (maxFreq - minFreq);
             float modulatedFrequency = juce::jlimit(minFreq, maxFreq, freq);
             phaserStages[i].setFilterCoefficient(modulatedFrequency, sampleRate);
             sample = phaserStages[i].process(sample, channel);
@@ -125,6 +132,9 @@ namespace DSP
         else if (parameterID == ParamIDs::waveForm)
         {
             updateOsc();
+        } else if (parameterID == ParamIDs::center)
+        {
+            center.setTargetValue(newValue);
         }
     }
 
@@ -180,7 +190,7 @@ namespace DSP
     //==============================================================================
     float Phaser::getStageFrequency(int nrOfStages, int index)
     {
-        float centerFrequency = getCenter();
+        float centerFrequency = center.getNextValue();
         float ratio = 1.5f;
         float spacing = 4.0f * getSpread();
 
@@ -270,5 +280,12 @@ namespace DSP
         double freq = 1.0 / (beatDuration * multiplier);
 
         return static_cast<float>(freq);
+    }
+
+    void Phaser::setBPM(double bpm) {
+        if (std::abs(bpm - BPM) > 0.01f) {
+            BPM = bpm;
+            updateFreq();
+        }
     }
 }

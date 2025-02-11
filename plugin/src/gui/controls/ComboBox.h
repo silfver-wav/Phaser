@@ -4,6 +4,8 @@
 #include <juce_graphics/juce_graphics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include "lookandfeel/TransparentComboBoxLookAndFeel.h"
+
 namespace Gui {
 class ComboBoxKnob : public juce::Component {
 public:

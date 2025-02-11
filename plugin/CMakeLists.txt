@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 project(PhaserPlugin VERSION 0.0.1)
 
-set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/PhaserPlugin")
+set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Phaser")
 
 juce_add_plugin(${PROJECT_NAME}
     COMPANY_NAME LICK_MY_DICK
@@ -12,7 +12,7 @@ juce_add_plugin(${PROJECT_NAME}
     PLUGIN_MANUFACTURER_CODE MCMP
     PLUGIN_CODE EXPL
     FORMATS Standalone VST3
-    PRODUCT_NAME "PhaserPlugin"
+    PRODUCT_NAME "Phaser"
 )
 
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
