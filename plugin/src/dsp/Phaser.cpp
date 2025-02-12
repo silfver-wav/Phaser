@@ -32,12 +32,17 @@ namespace DSP
         sampleRate = static_cast<float>(spec.sampleRate);
         numChannels = spec.numChannels;
 
-        lfoValue.reset(sampleRate, 0.01f);
-        center.reset(sampleRate, 0.01);
+        lfoValue.reset(sampleRate, 0.05f);
+        center.reset(sampleRate, 0.05f);
 
         dryWet.prepare(spec);
         feedback.resize(spec.numChannels);
-        osc.prepare(spec);
+
+        auto specDown = spec;
+        specDown.sampleRate /= (double) maxUpdateCounter;
+        specDown.maximumBlockSize = specDown.maximumBlockSize / (juce::uint32) maxUpdateCounter + 1;
+
+        osc.prepare(specDown);
         prepareAPFilters();
 
         updateFreq();
@@ -78,6 +83,8 @@ namespace DSP
 
         dryWet.pushDrySamples(inputBlock);
 
+        int counter = updateCounter;
+
         for (size_t channel = 0; channel < numChannels; ++channel)
         {
             auto *inputSamples = inputBlock.getChannelPointer(channel);
@@ -86,21 +93,27 @@ namespace DSP
 
             for (size_t i = 0; i < numSamples; ++i)
             {
+                if (counter == 0)
+                    lfoValue.setTargetValue(osc.processSample(0.f + phaseOffset));
+
                 auto input = inputSamples[i];
 
                 auto feedbackSign = getInvertPolarity() ? -1 : 1;
                 float inputWithFeedback = input + static_cast<float>(feedbackSign) * feedback[channel];;
 
-                lfoValue.setTargetValue(osc.processSample(0.f + phaseOffset));
-
                 processSampleThroughFilters(inputWithFeedback, lfoValue.getNextValue(), static_cast<int>(channel));
 
                 outputSamples[i] = inputWithFeedback;
                 feedback[channel] = inputWithFeedback * getFeedback();
+
+                counter++;
+                if (counter >= maxUpdateCounter)
+                    counter = 0;
             }
         }
 
         dryWet.mixWetSamples(outputBlock);
+        updateCounter = (updateCounter + (int) numSamples) % maxUpdateCounter;
     }
 
 
@@ -110,9 +123,10 @@ namespace DSP
 
         for (int i = 0; i < nrOfStages; i++)
         {
-            float freq = getStageFrequency(nrOfStages, i) + lfoValue * getLFODepth() * (maxFreq - minFreq);
-            float modulatedFrequency = juce::jlimit(minFreq, maxFreq, freq);
-            phaserStages[i].setFilterCoefficient(modulatedFrequency, sampleRate);
+            float stageFreq = getStageFrequency(nrOfStages, i);
+            float modulatedFreq = juce::mapToLog10(lfoValue * getLFODepth(), minFreq, maxFreq);
+            float freq = juce::jlimit(minFreq, maxFreq, stageFreq + modulatedFreq);
+            phaserStages[i].setFilterCoefficient(freq, sampleRate);
             sample = phaserStages[i].process(sample, channel);
         }
     }

@@ -31,6 +31,9 @@ namespace DSP
         int numChannels = 0;
         double BPM = 0;
 
+        int updateCounter = 0;
+        static constexpr int maxUpdateCounter = 4;
+
         void prepareAPFilters();
         void processSampleThroughFilters(float& sample, float lfoValue, int channel);
 
