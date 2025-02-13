@@ -31,29 +31,37 @@ namespace Gui
         {
             g.fillAll(juce::Colours::black);
 
-            auto bounds = getLocalBounds().reduced(2);
+            auto bounds = getLocalBounds();
             auto width = bounds.getWidth();
             auto height = bounds.getHeight();
 
             auto frequencies = phaser.getStageFrequencies();
             int nrOfStages = (int)*parameters.getRawParameterValue(ParamIDs::nrStages);
 
-            float skewFactor = 0.2f;
+            // auto range = juce::NormalisableRange<float>(20.0f, 20000.0f, 0.0f, 0.2f);
+            auto range = juce::NormalisableRange<float>(
+                                                        ParamRange::centerStart, ParamRange::centerEnd,
+                                                        ParamRange::centerInterval , ParamRange::centerSkew);
+
+            // Draw reference lines for 20 Hz and 20 kHz
+            g.setColour(juce::Colours::grey);
+
+            float x20Hz = width * range.convertTo0to1(20.0f) * 0.9f + width * 0.05f;
+            float x20kHz = width * range.convertTo0to1(20000.0f) * 0.9f + width * 0.05f;
+
+            float y = height / 2.0f; // Centered vertically
+
+            g.drawLine(x20Hz, y-20, x20Hz, y+20, 1.0f);
+            g.drawLine(x20kHz, y-20, x20kHz, y+20, 1.0f);
 
             for (int i = 0; i < nrOfStages; i++)
             {
-                auto freq = frequencies[i];
-
-                auto range = juce::NormalisableRange<float>(20.0f, 20000.0f, 0.0f, 0.2f);
+                auto freq = frequencies[0][i];
+                DBG("freq = " << freq);
                 float normFreq = range.convertTo0to1(freq);
 
-                DBG("freq = " << normFreq);
-
-                // Map the normalized frequency (0 to 1) to the screen width.
-                // The factor 0.9f compresses the range slightly for better alignment.
-                // The offset (-0.251239f) corrects the skewed mapping so that 20 Hz starts near 0.
-                float x = width * normFreq * 0.9f - 0.251239f;
-                float y = height / 2.0f; // Centered vertically
+                DBG("normFreq = " << normFreq);
+                float x = width * normFreq * 0.9f + width * 0.05f;
 
                 g.setColour(juce::Colours::white);
                 g.fillEllipse(x - 5, y - 5, 10, 10);
