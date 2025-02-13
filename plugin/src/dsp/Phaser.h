@@ -17,6 +17,11 @@ namespace DSP
         void process(const juce::dsp::ProcessContextReplacing<float>& context);
         void setBPM(double bpm);
         void reset();
+
+        std::array<std::array<float, 23>, 2> getStageFrequencies() const
+        {
+            return { stageFrequenciesLeft, stageFrequenciesRight };
+        }
     private:
         juce::AudioProcessorValueTreeState& parameters;
         juce::dsp::Oscillator<float> osc;
@@ -24,8 +29,10 @@ namespace DSP
         juce::dsp::DryWetMixer<float> dryWet;
         std::vector<float> feedback{2};
 
+        std::array<float, 23> stageFrequenciesLeft, stageFrequenciesRight;
+
         float lfoFrequency = 0.1f, minFreq = 20.f, maxFreq = 20000.0f;
-        juce::LinearSmoothedValue<float> lfoValue { ParamRange::lfoFreqDefault }, center { ParamRange::centerDefault };
+        juce::LinearSmoothedValue<float> lfoValue { ParamRange::lfoFreqDefault };
 
         float sampleRate = 44100.f;
         int numChannels = 0;
@@ -48,6 +55,12 @@ namespace DSP
         {
             return *parameters.getRawParameterValue("nr.stages");
         }
+
+        [[nodiscard]] float getCenter() const
+        {
+            return *parameters.getRawParameterValue(ParamIDs::center);
+        }
+
 
         [[nodiscard]] float getSpread() const
         {

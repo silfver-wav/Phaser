@@ -4,7 +4,6 @@ namespace DSP
 {
     Phaser::Phaser(juce::AudioProcessorValueTreeState& params) : parameters(params)
     {
-        parameters.addParameterListener(ParamIDs::center, this);
         parameters.addParameterListener(ParamIDs::lfoFreq, this);
         parameters.addParameterListener(ParamIDs::lfoRate, this);
         parameters.addParameterListener(ParamIDs::lfoSyncMode, this);
@@ -15,7 +14,6 @@ namespace DSP
 
     Phaser::~Phaser()
     {
-        parameters.removeParameterListener(ParamIDs::center, this);
         parameters.removeParameterListener(ParamIDs::lfoFreq, this);
         parameters.removeParameterListener(ParamIDs::lfoRate, this);
         parameters.removeParameterListener(ParamIDs::lfoSyncMode, this);
@@ -33,7 +31,6 @@ namespace DSP
         numChannels = spec.numChannels;
 
         lfoValue.reset(sampleRate, 0.05f);
-        center.reset(sampleRate, 0.05f);
 
         dryWet.prepare(spec);
         feedback.resize(spec.numChannels);
@@ -101,7 +98,7 @@ namespace DSP
                 auto feedbackSign = getInvertPolarity() ? -1 : 1;
                 float inputWithFeedback = input + static_cast<float>(feedbackSign) * feedback[channel];;
 
-                processSampleThroughFilters(inputWithFeedback, lfoValue.getNextValue(), static_cast<int>(channel));
+                processSampleThroughFilters(inputWithFeedback, lfoValue.getNextValue() * getLFODepth(), static_cast<int>(channel));
 
                 outputSamples[i] = inputWithFeedback;
                 feedback[channel] = inputWithFeedback * getFeedback();
@@ -120,12 +117,17 @@ namespace DSP
     void Phaser::processSampleThroughFilters(float& sample, float lfoValue, int channel)
     {
         int nrOfStages = getNrStages();
-
+        DBG("lfoValue at processSampleThroughFilters: " << lfoValue);
         for (int i = 0; i < nrOfStages; i++)
         {
             float stageFreq = getStageFrequency(nrOfStages, i);
-            float modulatedFreq = juce::mapToLog10(lfoValue * getLFODepth(), minFreq, maxFreq);
-            float freq = juce::jlimit(minFreq, maxFreq, stageFreq + modulatedFreq);
+            DBG("stageFreq at processSampleThroughFilters: " << stageFreq);
+            float freq = juce::jlimit(minFreq, maxFreq, stageFreq * (1+lfoValue));
+            DBG("freq at processSampleThroughFilters: " << freq);
+
+            if (channel == 0) stageFrequenciesLeft[i] = freq;
+            else stageFrequenciesRight[i] = freq;
+
             phaserStages[i].setFilterCoefficient(freq, sampleRate);
             sample = phaserStages[i].process(sample, channel);
         }
@@ -146,9 +148,6 @@ namespace DSP
         else if (parameterID == ParamIDs::waveForm)
         {
             updateOsc();
-        } else if (parameterID == ParamIDs::center)
-        {
-            center.setTargetValue(newValue);
         }
     }
 
@@ -204,7 +203,7 @@ namespace DSP
     //==============================================================================
     float Phaser::getStageFrequency(int nrOfStages, int index)
     {
-        float centerFrequency = center.getNextValue();
+        float centerFrequency = getCenter();
         float ratio = 1.5f;
         float spacing = 4.0f * getSpread();
 
@@ -230,6 +229,7 @@ namespace DSP
             float freq = centerFrequency * std::pow(ratio, rightIndex / spacing);
             return juce::jmin(maxFreq, freq); // Makes sure freq is not more than max frequency
         }
+
         if (nrOfStages % 2 == 0 && (index == centerIndex1 || index == centerIndex2)) // Even number of stages
         {
             float offset = 0.5f;

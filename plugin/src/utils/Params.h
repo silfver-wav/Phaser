@@ -33,8 +33,9 @@ namespace ParamRange
 
     constexpr float centerStart = 20.f;
     constexpr float centerEnd = 20000.f;
-    constexpr float centerInterval = 0.01f;
-    constexpr float centerDefault = 1000.f;
+    constexpr float centerInterval = 0.1f;
+    constexpr float centerDefault = 600.f;
+    constexpr float centerSkew = 0.2f;
 
     constexpr float feedbackStart = 0.f;
     constexpr float feedbackEnd = 1.f;
