@@ -35,7 +35,7 @@ Params::createParameterLayout()
                                                     "Center",
                                                     juce::NormalisableRange<float>(
                                                         ParamRange::centerStart, ParamRange::centerEnd,
-                                                        ParamRange::centerInterval), // , 0.5f), // skewfactor
+                                                        ParamRange::centerInterval , ParamRange::centerSkew),
                                                     ParamRange::centerDefault,
                                                     "Hz",
                                                     juce::AudioProcessorParameter::genericParameter,
