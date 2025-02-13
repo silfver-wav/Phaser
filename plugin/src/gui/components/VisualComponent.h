@@ -38,12 +38,10 @@ namespace Gui
             auto frequencies = phaser.getStageFrequencies();
             int nrOfStages = (int)*parameters.getRawParameterValue(ParamIDs::nrStages);
 
-            // auto range = juce::NormalisableRange<float>(20.0f, 20000.0f, 0.0f, 0.2f);
             auto range = juce::NormalisableRange<float>(
                                                         ParamRange::centerStart, ParamRange::centerEnd,
                                                         ParamRange::centerInterval , ParamRange::centerSkew);
 
-            // Draw reference lines for 20 Hz and 20 kHz
             g.setColour(juce::Colours::grey);
 
             float x20Hz = width * range.convertTo0to1(20.0f) * 0.9f + width * 0.05f;
@@ -53,6 +51,11 @@ namespace Gui
 
             g.drawLine(x20Hz, y-20, x20Hz, y+20, 1.0f);
             g.drawLine(x20kHz, y-20, x20kHz, y+20, 1.0f);
+
+            g.setFont(12.0f);
+
+            g.drawText("20 Hz", (int)x20Hz - 25, (int)y + 20, 50, 20, juce::Justification::centred);
+            g.drawText("20 kHz", (int)x20kHz - 25, (int)y + 20, 50, 20, juce::Justification::centred);
 
             for (int i = 0; i < nrOfStages; i++)
             {
