@@ -6,10 +6,12 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
     AudioPluginAudioProcessor& p)
     : AudioProcessorEditor(&p),
       processorRef(p),
+      topComponent(p.parameters, p.getPresetManger(), p.getPhaser()),
       outputComponent(p.parameters),
       filterComponent(p.parameters),
       lfoComponent(p.parameters)
 {
+    addAndMakeVisible(topComponent);
     addAndMakeVisible(outputComponent);
     addAndMakeVisible(filterComponent);
     addAndMakeVisible(lfoComponent);
@@ -32,6 +34,7 @@ void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g)
 void AudioPluginAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
+    topComponent.setBounds(area.removeFromTop(area.proportionOfHeight(0.5f)));
 
     auto bottomArea = area.reduced(Layout::padding);
     auto outputArea = bottomArea.removeFromRight(bottomArea.proportionOfWidth(0.2f));

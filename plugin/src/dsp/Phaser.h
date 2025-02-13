@@ -17,12 +17,19 @@ namespace DSP
         void process(const juce::dsp::ProcessContextReplacing<float>& context);
         void setBPM(double bpm);
         void reset();
+
+        std::array<float, 23> getStageFrequencies() const
+        {
+            return stageFrequencies;
+        }
     private:
         juce::AudioProcessorValueTreeState& parameters;
         juce::dsp::Oscillator<float> osc;
         std::array<FirstOrderAllPass, 23> phaserStages;
         juce::dsp::DryWetMixer<float> dryWet;
         std::vector<float> feedback{2};
+
+        std::array<float, 23> stageFrequencies;
 
         float lfoFrequency = 0.1f, minFreq = 20.f, maxFreq = 20000.0f;
         juce::LinearSmoothedValue<float> lfoValue { ParamRange::lfoFreqDefault }, center { ParamRange::centerDefault };

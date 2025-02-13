@@ -66,6 +66,7 @@ namespace DSP
         for (int i = 0; i < nrOfStages; i++)
         {
             float stageFrequency = getStageFrequency(nrOfStages, i);
+            stageFrequencies[i] = stageFrequency;
             phaserStages[i].setFilterCoefficient(stageFrequency, sampleRate);
         }
     }
@@ -126,6 +127,7 @@ namespace DSP
             float stageFreq = getStageFrequency(nrOfStages, i);
             float modulatedFreq = juce::mapToLog10(lfoValue * getLFODepth(), minFreq, maxFreq);
             float freq = juce::jlimit(minFreq, maxFreq, stageFreq + modulatedFreq);
+            stageFrequencies[i] = freq;
             phaserStages[i].setFilterCoefficient(freq, sampleRate);
             sample = phaserStages[i].process(sample, channel);
         }

@@ -39,11 +39,12 @@ public:
   void setStateInformation(const void *data, int sizeInBytes) override;
 
   Service::PresetManger &getPresetManger() { return *presetManger; }
+  DSP::Phaser &getPhaser() { return phaser; }
 
   juce::AudioProcessorValueTreeState parameters;
 private:
-  DSP::Phaser phaser;
   std::unique_ptr<Service::PresetManger> presetManger;
+  DSP::Phaser phaser;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };
