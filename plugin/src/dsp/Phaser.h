@@ -45,7 +45,7 @@ namespace DSP
         void processSampleThroughFilters(float& sample, float lfoValue, int channel);
 
         void parameterChanged(const juce::String& parameterID, float newValue) override;
-        float getStageFrequency(int nrOfStages, int index);
+        float getStageFrequency(int nrOfStages, int index, float centerFreq);
         void updateOsc();
         void updateFreq();
         [[nodiscard]] float getSubdivisionFreq(int choice) const;
