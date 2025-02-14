@@ -61,12 +61,12 @@ namespace Gui
                 float x = logToX(freq);
                 g.drawLine(x, y - 20, x, y + 20, 1.0f);
                 g.setFont(12.0f);
-                if (freq >= 1000.0f)
-                    g.drawText(juce::String(freq / 1000.0f) + " kHz", (int)x - 25, (int)y + 20, 50, 20,
-                               juce::Justification::centred);
-                else
-                    g.drawText(juce::String(freq) + " Hz", (int)x - 25, (int)y + 20, 50, 20,
-                               juce::Justification::centred);
+
+                auto text = juce::String();
+                if (freq >= 1000.0f) text = juce::String(freq / 1000.0f) + " kHz";
+                else text = juce::String(freq) + " Hz";
+                g.drawText(text, (int)x - 25, (int)y + 20, 50, 20,
+                           juce::Justification::centred);
             }
 
             // Frequency points for each stage
