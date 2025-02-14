@@ -43,6 +43,8 @@ public:
     stereoAttachment =
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(parameters, ParamIDs::stereo, stereo.slider);
 
+    lfoSyncMode.button.setLookAndFeel(&toggleButton);
+
     parameters.addParameterListener(ParamIDs::lfoSyncMode, this);
     isSyncMode = static_cast<int>(*parameters.getRawParameterValue(ParamIDs::lfoSyncMode)) != 0;
 
@@ -122,6 +124,8 @@ private:
     waveformAttachment;
   std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>
       stereoAttachment;
+
+  ToggleButtonLookAndFeel toggleButton;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LFOComponent)
 };
 }

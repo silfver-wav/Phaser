@@ -26,7 +26,7 @@ namespace Gui
                      ParamRange::centerDefault),
               feedback("Feedback", ParamRange::feedbackStart, ParamRange::feedbackEnd,
                        ParamRange::feedbackInterval, ParamRange::feedbackDefault),
-              invPolarity("Invert Polarity", ParamIDs::invertPolarity)
+              invPolarity("", ParamIDs::invertPolarity)
         {
             addAndMakeVisible(group);
             addAndMakeVisible(nrOfStages);
@@ -51,6 +51,7 @@ namespace Gui
                 std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
                     parameters, ParamIDs::invertPolarity, invPolarity.button);
 
+            invPolarity.button.setLookAndFeel(&invertPolarityLookAndFeel);
             setBufferedToImage(true);
         }
 
@@ -88,6 +89,8 @@ namespace Gui
             nrStagesAttachment, spreadAttachment, centerAttachment, feedbackAttachment;
         std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>
         invPolarityAttachment;
+
+        InvertPolarityLookAndFeel invertPolarityLookAndFeel;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FiltersComponent)
     };
 }
