@@ -27,7 +27,7 @@ AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
 
 void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(Colours::primaryColour.brighter(0.35f));
+    g.fillAll(Colours::primaryColour.brighter(0.15f));
 }
 
 void AudioPluginAudioProcessorEditor::resized()

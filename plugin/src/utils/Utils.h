@@ -2,9 +2,9 @@
 #include <juce_graphics/juce_graphics.h>
 
 namespace Colours {
-  inline juce::Colour primaryColour = juce::Colour::fromRGB(171, 196, 220);
-  inline juce::Colour secondaryColour = juce::Colours::blue;
-inline juce::Colour thirdaryColour = juce::Colour::fromRGB(157, 155, 166);
+  inline juce::Colour primaryColour = juce::Colour::fromRGB(124, 186, 122);
+  inline juce::Colour secondaryColour = juce::Colour::fromRGB(176, 222, 175);
+inline juce::Colour thirdaryColour = primaryColour.darker(0.3f); // juce::Colour::fromRGB(148, 145, 156);
 };
 
 namespace Layout {
