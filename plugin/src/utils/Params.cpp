@@ -24,18 +24,14 @@ Params::createParameterLayout()
                                               ParamRange::spreadDefault,
                                               String(),
                                               AudioProcessorParameter::genericParameter,
-                                              [](float value, float)
-                                              {
-                                                  return String(value * 100.0f, 1) + " %";
-                                              }
-        ));
+                                              [](float value, float) { return String(static_cast<int>(value * 100)) + " %"; }));
 
     params.push_back(
         std::make_unique<juce::AudioParameterFloat>(ParamIDs::center,
                                                     "Center",
                                                     juce::NormalisableRange<float>(
                                                         ParamRange::centerStart, ParamRange::centerEnd,
-                                                        ParamRange::centerInterval , ParamRange::centerSkew),
+                                                        ParamRange::centerInterval , ParamRange::centerSkew, false),
                                                     ParamRange::centerDefault,
                                                     "Hz",
                                                     juce::AudioProcessorParameter::genericParameter,
@@ -53,11 +49,7 @@ Params::createParameterLayout()
                                               ParamRange::feedbackDefault,
                                               String(),
                                               AudioProcessorParameter::genericParameter,
-                                              [](float value, float)
-                                              {
-                                                  return String(value * 100.0f, 1) + " %";
-                                              }
-        ));
+                                              [](float value, float) { return String(static_cast<int>(value * 100)) + " %"; }));
 
     params.push_back(std::make_unique<AudioParameterBool>(ParamIDs::invertPolarity, "Invert Polarity", false));
 
@@ -102,11 +94,7 @@ Params::createParameterLayout()
                                               ParamRange::stereoDefault,
                                               String(),
                                               AudioProcessorParameter::genericParameter,
-                                              [](float value, float)
-                                              {
-                                                  return String(value * 100, 1) + " %";
-                                              }
-        ));
+                                              [](float value, float) { return String(static_cast<int>(value * 100)) + " %"; }));
 
     params.push_back(std::make_unique<AudioParameterFloat>(
         ParamIDs::mix, "Mix",

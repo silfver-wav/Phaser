@@ -38,39 +38,52 @@ namespace Gui
             auto frequencies = phaser.getStageFrequencies();
             int nrOfStages = (int)*parameters.getRawParameterValue(ParamIDs::nrStages);
 
-            auto range = juce::NormalisableRange<float>(
-                                                        ParamRange::centerStart, ParamRange::centerEnd,
-                                                        ParamRange::centerInterval , ParamRange::centerSkew);
+            // Logarithmic scaling for the X-axis with padding
+            auto logToX = [width, this](float freq)
+            {
+                float logFreq = std::log10(freq);
+                float logMin = std::log10(minFreq);
+                float logMax = std::log10(maxFreq);
+
+                float reducedWidth = width * (1.0f - 2.0f * paddingPercentage);
+                float x = width * paddingPercentage + reducedWidth * (logFreq - logMin) / (logMax - logMin);
+                return x;
+            };
 
             g.setColour(juce::Colours::grey);
+            float freqMarkers[] = {20.0f, 50.0f, 100.0f, 200.0f, 500.0f, 1000.0f, 2000.0f, 5000.0f, 10000.0f, 20000.0f};
 
-            float x20Hz = width * range.convertTo0to1(20.0f) * 0.9f + width * 0.05f;
-            float x20kHz = width * range.convertTo0to1(20000.0f) * 0.9f + width * 0.05f;
+            float y = height / 2.0f;
 
-            float y = height / 2.0f; // Centered vertically
+            // Frequency markers
+            for (auto freq : freqMarkers)
+            {
+                float x = logToX(freq);
+                g.drawLine(x, y - 20, x, y + 20, 1.0f);
+                g.setFont(12.0f);
+                if (freq >= 1000.0f)
+                    g.drawText(juce::String(freq / 1000.0f) + " kHz", (int)x - 25, (int)y + 20, 50, 20,
+                               juce::Justification::centred);
+                else
+                    g.drawText(juce::String(freq) + " Hz", (int)x - 25, (int)y + 20, 50, 20,
+                               juce::Justification::centred);
+            }
 
-            g.drawLine(x20Hz, y-20, x20Hz, y+20, 1.0f);
-            g.drawLine(x20kHz, y-20, x20kHz, y+20, 1.0f);
-
-            g.setFont(12.0f);
-
-            g.drawText("20 Hz", (int)x20Hz - 25, (int)y + 20, 50, 20, juce::Justification::centred);
-            g.drawText("20 kHz", (int)x20kHz - 25, (int)y + 20, 50, 20, juce::Justification::centred);
-
+            // Frequency points for each stage
             for (int i = 0; i < nrOfStages; i++)
             {
                 auto freqLeft = frequencies[0][i];
                 auto freqRight = frequencies[1][i];
 
-                // Apply phase offset only in the visualizer (for stereo effect)
-                float xLeft = width * range.convertTo0to1(freqLeft) * 0.9f + width * 0.05f;
-                float xRight = width * range.convertTo0to1(freqRight) * 0.9f + width * 0.05f;
+                float xLeft = logToX(freqLeft);
+                float xRight = logToX(freqRight);
 
                 g.setColour(juce::Colours::white);
-                g.fillEllipse(xLeft - 5, y - 5, 10, 10);  // Left channel
+                g.fillEllipse(xLeft - 5, y - 5, 10, 10); // Left channel
                 g.fillEllipse(xRight - 5, y - 5, 10, 10); // Right channel
             }
         }
+
 
         void timerCallback() override
         {
@@ -81,6 +94,8 @@ namespace Gui
     private:
         juce::AudioProcessorValueTreeState& parameters;
         DSP::Phaser& phaser;
+
+        float minFreq = 20.0f, maxFreq = 20000.0f, paddingPercentage = 0.075f;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VisualComponent)
     };

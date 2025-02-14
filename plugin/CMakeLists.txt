@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(PhaserPlugin VERSION 0.0.1)
+project(PhaserPlugin VERSION 1.0.0)
 
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Phaser")
 

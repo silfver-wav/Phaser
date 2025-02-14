@@ -4,5 +4,5 @@
 namespace ProjectInfo {
 inline juce::String companyName = "LICK_MY_DICK"; // Ändra sen
 inline juce::String projectName = "Phaser";
-inline juce::String versionString = "0.1";
+inline juce::String versionString = "1.0";
 };
