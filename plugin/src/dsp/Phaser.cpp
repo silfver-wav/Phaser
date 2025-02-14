@@ -36,8 +36,8 @@ namespace DSP
         feedback.resize(spec.numChannels);
 
         auto specDown = spec;
-        specDown.sampleRate /= (double) maxUpdateCounter;
-        specDown.maximumBlockSize = specDown.maximumBlockSize / (juce::uint32) maxUpdateCounter + 1;
+        specDown.sampleRate /= (double)maxUpdateCounter;
+        specDown.maximumBlockSize = specDown.maximumBlockSize / (juce::uint32)maxUpdateCounter + 1;
 
         osc.prepare(specDown);
         prepareAPFilters();
@@ -62,7 +62,7 @@ namespace DSP
 
         for (int i = 0; i < nrOfStages; i++)
         {
-            float stageFrequency = getStageFrequency(nrOfStages, i);
+            float stageFrequency = getStageFrequency(nrOfStages, i, getCenter());
             phaserStages[i].setFilterCoefficient(stageFrequency, sampleRate);
         }
     }
@@ -84,8 +84,8 @@ namespace DSP
 
         for (size_t channel = 0; channel < numChannels; ++channel)
         {
-            auto *inputSamples = inputBlock.getChannelPointer(channel);
-            auto *outputSamples = outputBlock.getChannelPointer(channel);
+            auto* inputSamples = inputBlock.getChannelPointer(channel);
+            auto* outputSamples = outputBlock.getChannelPointer(channel);
             float phaseOffset = (channel == 1) ? juce::MathConstants<float>::halfPi * getAmountOfStereo() : 0.0f;
 
             for (size_t i = 0; i < numSamples; ++i)
@@ -98,7 +98,8 @@ namespace DSP
                 auto feedbackSign = getInvertPolarity() ? -1 : 1;
                 float inputWithFeedback = input + static_cast<float>(feedbackSign) * feedback[channel];;
 
-                processSampleThroughFilters(inputWithFeedback, lfoValue.getNextValue() * getLFODepth(), static_cast<int>(channel));
+                processSampleThroughFilters(inputWithFeedback, lfoValue.getNextValue() * getLFODepth(),
+                                            static_cast<int>(channel));
 
                 outputSamples[i] = inputWithFeedback;
                 feedback[channel] = inputWithFeedback * getFeedback();
@@ -110,23 +111,24 @@ namespace DSP
         }
 
         dryWet.mixWetSamples(outputBlock);
-        updateCounter = (updateCounter + (int) numSamples) % maxUpdateCounter;
+        updateCounter = (updateCounter + (int)numSamples) % maxUpdateCounter;
     }
 
 
     void Phaser::processSampleThroughFilters(float& sample, float lfoValue, int channel)
     {
         int nrOfStages = getNrStages();
-        DBG("lfoValue at processSampleThroughFilters: " << lfoValue);
+        auto center = getCenter();
+
         for (int i = 0; i < nrOfStages; i++)
         {
-            float stageFreq = getStageFrequency(nrOfStages, i);
-            DBG("stageFreq at processSampleThroughFilters: " << stageFreq);
-            float freq = juce::jlimit(minFreq, maxFreq, stageFreq * (1+lfoValue));
-            DBG("freq at processSampleThroughFilters: " << freq);
+            float stageFreq = getStageFrequency(nrOfStages, i, center);
+            float freq = juce::jlimit(minFreq, maxFreq, stageFreq * (1 + lfoValue));
 
-            if (channel == 0) stageFrequenciesLeft[i] = freq;
-            else stageFrequenciesRight[i] = freq;
+            if (channel == 0)
+                stageFrequenciesLeft[i] = freq;
+            else
+                stageFrequenciesRight[i] = freq;
 
             phaserStages[i].setFilterCoefficient(freq, sampleRate);
             sample = phaserStages[i].process(sample, channel);
@@ -201,47 +203,46 @@ namespace DSP
     }
 
     //==============================================================================
-    float Phaser::getStageFrequency(int nrOfStages, int index)
+    float Phaser::getStageFrequency(int nrOfStages, int index, float centerFreq)
     {
-        float centerFrequency = getCenter();
-        float ratio = 1.5f;
-        float spacing = 4.0f * getSpread();
+        float spread = getSpread();
+        float spacing = std::pow(1.75f, spread * 2.0f);
 
         // Return the center frequency if spread is zero or there is only one stage
-        if (spacing == 0 || nrOfStages == 1)
+        if (spread == 0 || nrOfStages == 1)
         {
-            return centerFrequency;
+            return centerFreq; // No spread means all frequencies are at the center
         }
 
-        int halfStages = nrOfStages / 2;
-        int centerIndex1 = halfStages - 1;
-        int centerIndex2 = nrOfStages % 2 == 0 ? halfStages : halfStages;
+        int centerIndex = nrOfStages / 2;
 
-        if (index < centerIndex1) // Left of center
+        if (nrOfStages % 2 == 0)
         {
-            int leftIndex = centerIndex1 - index;
-            float freq = centerFrequency / std::pow(ratio, leftIndex / spacing);
-            return juce::jmax(minFreq, freq); // Makes sure freq is not less than min frequency
+            if (centerIndex <= index) // Right of center
+            {
+                int rightIndex = index - centerIndex + 1;
+                float freq = centerFreq * std::pow(spacing, static_cast<float>(rightIndex));
+                return juce::jmin(maxFreq, freq);
+            }
         }
-        if (index > centerIndex2) // Right of center
+        else
         {
-            int rightIndex = index - centerIndex2;
-            float freq = centerFrequency * std::pow(ratio, rightIndex / spacing);
-            return juce::jmin(maxFreq, freq); // Makes sure freq is not more than max frequency
-        }
-
-        if (nrOfStages % 2 == 0 && (index == centerIndex1 || index == centerIndex2)) // Even number of stages
-        {
-            float offset = 0.5f;
-
-            float freq = index == centerIndex1
-                             ? centerFrequency / std::pow(ratio, offset / spacing)
-                             : centerFrequency * std::pow(ratio, offset / spacing);
-
-            return juce::jlimit(minFreq, maxFreq, freq); // Makes sure freq is in range
+            if (index > centerIndex) // Right of center
+            {
+                int rightIndex = index - centerIndex;
+                float freq = centerFreq * std::pow(spacing, static_cast<float>(rightIndex));
+                return juce::jmin(maxFreq, freq);
+            }
         }
 
-        return centerFrequency;
+        if (index < centerIndex) // Left of center
+        {
+            int leftIndex = centerIndex - index;
+            float freq = centerFreq / std::pow(spacing, static_cast<float>(leftIndex));
+            return juce::jmax(minFreq, freq);
+        }
+
+        return centerFreq;
     }
 
     float Phaser::getSubdivisionFreq(const int choice) const
@@ -296,8 +297,10 @@ namespace DSP
         return static_cast<float>(freq);
     }
 
-    void Phaser::setBPM(double bpm) {
-        if (std::abs(bpm - BPM) > 0.01f) {
+    void Phaser::setBPM(double bpm)
+    {
+        if (std::abs(bpm - BPM) > 0.01f)
+        {
             BPM = bpm;
             updateFreq();
         }

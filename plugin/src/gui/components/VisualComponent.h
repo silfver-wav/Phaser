@@ -59,15 +59,16 @@ namespace Gui
 
             for (int i = 0; i < nrOfStages; i++)
             {
-                auto freq = frequencies[0][i];
-                DBG("freq = " << freq);
-                float normFreq = range.convertTo0to1(freq);
+                auto freqLeft = frequencies[0][i];
+                auto freqRight = frequencies[1][i];
 
-                DBG("normFreq = " << normFreq);
-                float x = width * normFreq * 0.9f + width * 0.05f;
+                // Apply phase offset only in the visualizer (for stereo effect)
+                float xLeft = width * range.convertTo0to1(freqLeft) * 0.9f + width * 0.05f;
+                float xRight = width * range.convertTo0to1(freqRight) * 0.9f + width * 0.05f;
 
                 g.setColour(juce::Colours::white);
-                g.fillEllipse(x - 5, y - 5, 10, 10);
+                g.fillEllipse(xLeft - 5, y - 5, 10, 10);  // Left channel
+                g.fillEllipse(xRight - 5, y - 5, 10, 10); // Right channel
             }
         }
 
