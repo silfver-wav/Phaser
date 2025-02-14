@@ -122,11 +122,14 @@ namespace DSP
         {
             float stageFreq = getStageFrequency(nrOfStages, i);
             DBG("stageFreq at processSampleThroughFilters: " << stageFreq);
+
             float freq = juce::jlimit(minFreq, maxFreq, stageFreq * (1+lfoValue));
             DBG("freq at processSampleThroughFilters: " << freq);
 
-            if (channel == 0) stageFrequenciesLeft[i] = freq;
-            else stageFrequenciesRight[i] = freq;
+            if (channel == 0)
+                stageFrequenciesLeft[i] = freq;
+            else
+                stageFrequenciesRight[i] = freq;
 
             phaserStages[i].setFilterCoefficient(freq, sampleRate);
             sample = phaserStages[i].process(sample, channel);
