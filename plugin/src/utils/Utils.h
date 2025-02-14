@@ -4,7 +4,7 @@
 namespace Colours {
   inline juce::Colour primaryColour = juce::Colour::fromRGB(124, 186, 122);
   inline juce::Colour secondaryColour = juce::Colour::fromRGB(176, 222, 175);
-inline juce::Colour thirdaryColour = juce::Colours::dimgrey; // juce::Colour::fromRGB(148, 145, 156);
+inline juce::Colour thirdaryColour = primaryColour.darker(0.3f); // juce::Colour::fromRGB(148, 145, 156);
 };
 
 namespace Layout {
