@@ -456,5 +456,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 #cmake builds
-cmake-build-debug-visual-studio-1
-cmake-build-release-visual-studio-1
+cmake-build-debug-phaser
+cmake-build-release-phaser
